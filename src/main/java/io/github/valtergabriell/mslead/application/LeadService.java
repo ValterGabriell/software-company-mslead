@@ -3,10 +3,10 @@ package io.github.valtergabriell.mslead.application;
 import io.github.valtergabriell.mslead.application.domain.Lead;
 import io.github.valtergabriell.mslead.application.domain.dto.*;
 import io.github.valtergabriell.mslead.application.domain.enumerations.TypePerson;
-import io.github.valtergabriell.mslead.application.exception.RequestException;
 import io.github.valtergabriell.mslead.application.helper.ModelMapperSingleton;
 import io.github.valtergabriell.mslead.application.helper.PasswordEncoder;
 import io.github.valtergabriell.mslead.application.helper.Validation;
+import io.github.valtergabriell.mslead.exception.RequestExceptions;
 import io.github.valtergabriell.mslead.infra.repository.LeadRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -39,7 +39,7 @@ public class LeadService {
     public CreatedLeadResponse createNewLead(ReqLeadCreation reqLeadCreation) {
         boolean managerAlreadyPresentOnDatabase = leadRepository.findById(reqLeadCreation.getId()).isPresent();
         if (managerAlreadyPresentOnDatabase) {
-            throw new RequestException("Usuário " + reqLeadCreation.getId() + " já existente no banco de dados");
+            throw new RequestExceptions("Usuário " + reqLeadCreation.getId() + " já existente no banco de dados");
         }
 
         validatingFields(reqLeadCreation);
@@ -57,13 +57,13 @@ public class LeadService {
     }
 
     public List<Employees> findAllColaborators(Long id) {
-        Lead manager = leadRepository.findById(id).orElseThrow(() -> new RequestException("Líder " + id + " não foi encontrado!"));
+        Lead manager = leadRepository.findById(id).orElseThrow(() -> new RequestExceptions("Líder " + id + " não foi encontrado!"));
         //todo: chamar o metodo para trazer lista de colaboradores liderados por esse lider do mscolaborator
         return null;
     }
 
     public LeadUpdateResponse updateManagerById(Long cnpj, ReqUpdateLead reqUpdateLead) {
-        Lead leadFounded = leadRepository.findById(cnpj).orElseThrow(() -> new RequestException("Líder não foi encontrado"));
+        Lead leadFounded = leadRepository.findById(cnpj).orElseThrow(() -> new RequestExceptions("Líder não foi encontrado"));
         leadFounded.setName(reqUpdateLead.getName());
         leadFounded.setEmail(reqUpdateLead.getEmail());
         leadFounded.setPhone(reqUpdateLead.getPhone());
@@ -73,9 +73,16 @@ public class LeadService {
     }
 
 
-    public Lead findLeadById(Long id) {
-        return leadRepository.findById(id)
-                .orElseThrow(() -> new RequestException("Líder " + id + " não foi encontrado"));
+    public Response<Lead> findLeadById(Long id) {
+        Optional<Lead> lead = leadRepository.findById(id);
+        Response<Lead> response = new Response<>();
+        if (lead.isEmpty()) {
+            response.setMessage("Líder com id " + id + " não encontrado");
+        } else {
+            response.setData(lead.get());
+            response.setMessage("Sucesso!");
+        }
+        return response;
     }
 
     public List<Lead> findAll() {
@@ -85,7 +92,7 @@ public class LeadService {
     public void deleteLeadById(Long id) {
         Optional<Lead> lead = leadRepository.findById(id);
         if (lead.isEmpty()) {
-            throw new RequestException("Usuário " + id + " não foi encontrado");
+            throw new RequestExceptions("Usuário " + id + " não foi encontrado");
         }
         leadRepository.delete(lead.get());
     }

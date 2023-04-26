@@ -33,8 +33,8 @@ public class LeadController {
     }
 
     @GetMapping(value = "/find-by-id", params = {"cnpj"})
-    public ResponseEntity<Lead> findLeadById(@RequestParam("cnpj") Long cnpj) {
-        Lead leadById = leadService.findLeadById(cnpj);
+    public ResponseEntity<Response<Lead>> findLeadById(@RequestParam("cnpj") Long cnpj) {
+        Response<Lead> leadById = leadService.findLeadById(cnpj);
         return new ResponseEntity<>(leadById, HttpStatus.OK);
     }
     @PutMapping(value = "/update", params = {"cnpj"})
