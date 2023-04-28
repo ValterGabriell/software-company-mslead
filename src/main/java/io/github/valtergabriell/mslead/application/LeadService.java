@@ -11,7 +11,9 @@ import io.github.valtergabriell.mslead.infra.external.send.SendNewClientToQueue;
 import io.github.valtergabriell.mslead.infra.repository.LeadRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -40,6 +42,13 @@ public class LeadService {
 
     public CreatedLeadResponse createNewLead(ReqLeadCreation reqLeadCreation) {
         ModelMapper modelMapper = ModelMapperSingleton.getInstance();
+        URI headerLocation = ServletUriComponentsBuilder
+                .fromHttpUrl("http://localhost:9090")
+                .path("account")
+                .query("cpf={id}")
+                .buildAndExpand(reqLeadCreation.getId())
+                .toUri();
+
 
         boolean managerAlreadyPresentOnDatabase = leadRepository.findById(reqLeadCreation.getId()).isPresent();
         if (managerAlreadyPresentOnDatabase) {
@@ -48,7 +57,9 @@ public class LeadService {
         validatingFields(reqLeadCreation);
         Lead lead = createNewLeadAndSaveAtDatabase(reqLeadCreation, modelMapper);
         sendLeadToQueueForCreateClient(reqLeadCreation, modelMapper, lead);
-        return modelMapper.map(lead, CreatedLeadResponse.class);
+        CreatedLeadResponse createdLeadResponse = modelMapper.map(lead, CreatedLeadResponse.class);
+        createdLeadResponse.setUri(headerLocation.toString());
+        return createdLeadResponse;
     }
 
     private void sendLeadToQueueForCreateClient(ReqLeadCreation reqLeadCreation, ModelMapper modelMapper, Lead lead) {

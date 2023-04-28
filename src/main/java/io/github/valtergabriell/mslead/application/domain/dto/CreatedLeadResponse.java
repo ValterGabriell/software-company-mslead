@@ -22,4 +22,5 @@ public class CreatedLeadResponse {
     private LocalDate creationDate;
     private String password;
     private TypePerson type;
+    private String uri;
 }
