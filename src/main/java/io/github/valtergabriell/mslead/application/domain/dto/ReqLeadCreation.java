@@ -4,6 +4,7 @@ import io.github.valtergabriell.mslead.application.domain.enumerations.Gender;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @AllArgsConstructor
@@ -19,6 +20,7 @@ public class ReqLeadCreation {
     private LocalDate bornDay;
     private LocalDate creationDate;
     private String password;
+    private BigDecimal income;
 
     public Long getId() {
         return id;
@@ -58,5 +60,9 @@ public class ReqLeadCreation {
 
     public String getPassword() {
         return password;
+    }
+
+    public BigDecimal getIncome() {
+        return income;
     }
 }

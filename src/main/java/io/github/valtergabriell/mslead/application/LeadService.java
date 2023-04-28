@@ -7,6 +7,7 @@ import io.github.valtergabriell.mslead.application.helper.ModelMapperSingleton;
 import io.github.valtergabriell.mslead.application.helper.PasswordEncoder;
 import io.github.valtergabriell.mslead.application.helper.Validation;
 import io.github.valtergabriell.mslead.exception.RequestExceptions;
+import io.github.valtergabriell.mslead.infra.external.send.SendNewClientToQueue;
 import io.github.valtergabriell.mslead.infra.repository.LeadRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -19,9 +20,11 @@ import java.util.Optional;
 @Service
 public class LeadService {
     private final LeadRepository leadRepository;
+    private final SendNewClientToQueue sendNewClientToQueue;
 
-    public LeadService(LeadRepository leadRepository) {
+    public LeadService(LeadRepository leadRepository, SendNewClientToQueue sendNewClientToQueue) {
         this.leadRepository = leadRepository;
+        this.sendNewClientToQueue = sendNewClientToQueue;
     }
 
     private static void validatingFields(ReqLeadCreation reqLeadCreation) {
@@ -35,16 +38,26 @@ public class LeadService {
         validation.validateCnpjLenght(reqLeadCreation.getId(), " - CNPJ deve ter 14 dígitos");
     }
 
-
     public CreatedLeadResponse createNewLead(ReqLeadCreation reqLeadCreation) {
+        ModelMapper modelMapper = ModelMapperSingleton.getInstance();
+
         boolean managerAlreadyPresentOnDatabase = leadRepository.findById(reqLeadCreation.getId()).isPresent();
         if (managerAlreadyPresentOnDatabase) {
             throw new RequestExceptions("Usuário " + reqLeadCreation.getId() + " já existente no banco de dados");
         }
-
         validatingFields(reqLeadCreation);
+        Lead lead = createNewLeadAndSaveAtDatabase(reqLeadCreation, modelMapper);
+        sendLeadToQueueForCreateClient(reqLeadCreation, modelMapper, lead);
+        return modelMapper.map(lead, CreatedLeadResponse.class);
+    }
 
-        ModelMapper modelMapper = ModelMapperSingleton.getInstance();
+    private void sendLeadToQueueForCreateClient(ReqLeadCreation reqLeadCreation, ModelMapper modelMapper, Lead lead) {
+        ClientAccount clientAccount = modelMapper.map(lead, ClientAccount.class);
+        clientAccount.setIncome(reqLeadCreation.getIncome());
+        sendNewClientToQueue.createNewClient(clientAccount);
+    }
+
+    private Lead createNewLeadAndSaveAtDatabase(ReqLeadCreation reqLeadCreation, ModelMapper modelMapper) {
         Lead lead = modelMapper.map(reqLeadCreation, Lead.class);
         LocalDate currentDate = LocalDate.now();
         lead.setAccountCreationDate(currentDate);
@@ -52,8 +65,7 @@ public class LeadService {
         lead.setActive(true);
         lead.setType(TypePerson.JURY_PERSON);
         leadRepository.save(lead);
-
-        return modelMapper.map(lead, CreatedLeadResponse.class);
+        return lead;
     }
 
     public List<Employees> findAllColaborators(Long id) {
