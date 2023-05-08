@@ -126,18 +126,15 @@ http://localhost:8080/lead/
 }
 ```
 
-</br>
 
 <h2>Recuperar todos os colaboradores associados a um lider</h2>
 <table>
   <tr>
     <th>Request</th>
-  
     <th>Query</th>
   </tr>
   <tr>
     <td>/find-all-colaborators</td>
-  
     <td>cnpj</td>
   </tr>
 </table>
@@ -157,12 +154,10 @@ Lista de colaboradores
 <table>
   <tr>
     <th>Request</th>
-  
     <th>Query</th>
   </tr>
   <tr>
     <td>/find-all-colaborators</td>
-  
     <td>cnpj</td>
   </tr>
 </table>
@@ -205,21 +200,17 @@ Lista de colaboradores
 <h2>Deletar um líder</h2>
 <table>
   <tr>
-    <th>Request</th>
-  
+    <th>Request</th>  
     <th>Query</th>
   </tr>
   <tr>
-    <td>/delete</td>
-  
+    <td>/delete</td>  
     <td>cnpj</td>
   </tr>
 </table>
 
 
 <h1>Créditos</h1>
-
----
 
 <a href="https://www.linkedin.com/in/valter-gabriel">
   <img style="border-radius: 50%;" src="https://user-images.githubusercontent.com/63808405/171045850-84caf881-ee10-4782-9016-ea1682c4731d.jpeg" width="100px;" alt=""/>
