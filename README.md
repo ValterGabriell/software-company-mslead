@@ -60,7 +60,7 @@ http://localhost:8080/lead/
 {
 	"id":93856573232123,
 	"name":"Valter Gabriel",
-	"email":"valoira08r@hotmail.com",
+	"email":"email@hotmail.com",
 	"company":"Dev Cast",
 	"phone":"+5596123547895",
 	"gender":0,
