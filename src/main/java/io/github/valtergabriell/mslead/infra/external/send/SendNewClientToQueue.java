@@ -22,7 +22,7 @@ public class SendNewClientToQueue {
     }
 
     public void createNewClient(ClientAccount clientAccount) {
-        log.info("Payload recebido: " + clientAccount.toString());
+        log.info("Dados recebidos: " + clientAccount.toString());
         String payload = convertToJson(clientAccount);
         rabbitTemplate.convertAndSend(createClientQueue.getName(), payload);
     }

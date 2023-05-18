@@ -37,6 +37,8 @@ public class LeadController {
         Response<Lead> leadById = leadService.findLeadById(cnpj);
         return new ResponseEntity<>(leadById, HttpStatus.OK);
     }
+
+
     @PutMapping(value = "/update", params = {"cnpj"})
     public ResponseEntity<LeadUpdateResponse> updateLeadFieldsWithoutListEmployers(@RequestParam("cnpj") Long cnpj, @RequestBody ReqUpdateLead reqUpdateLead) {
         LeadUpdateResponse leadUpdateResponse = leadService.updateManagerById(cnpj, reqUpdateLead);
@@ -46,7 +48,7 @@ public class LeadController {
     @DeleteMapping(value = "/delete", params = {"cnpj"})
     public ResponseEntity deleteLeadByCnpj(@RequestParam("cnpj") Long cnpj) {
         leadService.deleteLeadById(cnpj);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return ResponseEntity.status(204).body("Deletando líder e seus colaboradores junto com os trabalhos...");
     }
 
 

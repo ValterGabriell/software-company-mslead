@@ -7,6 +7,7 @@ import io.github.valtergabriell.mslead.application.helper.ModelMapperSingleton;
 import io.github.valtergabriell.mslead.application.helper.PasswordEncoder;
 import io.github.valtergabriell.mslead.application.helper.Validation;
 import io.github.valtergabriell.mslead.exception.RequestExceptions;
+import io.github.valtergabriell.mslead.infra.external.openfeign.EmployeesConnection;
 import io.github.valtergabriell.mslead.infra.external.send.SendNewClientToQueue;
 import io.github.valtergabriell.mslead.infra.repository.LeadRepository;
 import org.modelmapper.ModelMapper;
@@ -23,10 +24,12 @@ import java.util.Optional;
 public class LeadService {
     private final LeadRepository leadRepository;
     private final SendNewClientToQueue sendNewClientToQueue;
+    private final EmployeesConnection employeesConnection;
 
-    public LeadService(LeadRepository leadRepository, SendNewClientToQueue sendNewClientToQueue) {
+    public LeadService(LeadRepository leadRepository, SendNewClientToQueue sendNewClientToQueue, EmployeesConnection employeesConnection) {
         this.leadRepository = leadRepository;
         this.sendNewClientToQueue = sendNewClientToQueue;
+        this.employeesConnection = employeesConnection;
     }
 
     private static void validatingFields(ReqLeadCreation reqLeadCreation) {
@@ -56,7 +59,7 @@ public class LeadService {
         }
         validatingFields(reqLeadCreation);
         Lead lead = createNewLeadAndSaveAtDatabase(reqLeadCreation, modelMapper);
-        sendLeadToQueueForCreateClient(reqLeadCreation, modelMapper, lead);
+      //  sendLeadToQueueForCreateClient(reqLeadCreation, modelMapper, lead);
         CreatedLeadResponse createdLeadResponse = modelMapper.map(lead, CreatedLeadResponse.class);
         createdLeadResponse.setUri(headerLocation.toString());
         return createdLeadResponse;
@@ -117,6 +120,7 @@ public class LeadService {
         if (lead.isEmpty()) {
             throw new RequestExceptions("Usuário " + id + " não foi encontrado");
         }
+        employeesConnection.deleteAllEmployeesWhenLeadIsDeleted(id);
         leadRepository.delete(lead.get());
     }
 }
