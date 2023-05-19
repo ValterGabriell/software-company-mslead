@@ -7,11 +7,14 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MqConfig {
     @Bean
-    public Queue config(){
+    public Queue createClientQueue(){
         String queueName = "create-client-queue";
         return new Queue(queueName, true);
     }
 
-
-
+    @Bean
+    public Queue deleteAccountQueue(){
+        String queueName = "delete-client-queue";
+        return new Queue(queueName, true);
+    }
 }

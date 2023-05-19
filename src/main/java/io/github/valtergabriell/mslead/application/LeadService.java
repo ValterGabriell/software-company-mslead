@@ -8,7 +8,7 @@ import io.github.valtergabriell.mslead.application.helper.PasswordEncoder;
 import io.github.valtergabriell.mslead.application.helper.Validation;
 import io.github.valtergabriell.mslead.exception.RequestExceptions;
 import io.github.valtergabriell.mslead.infra.external.openfeign.EmployeesConnection;
-import io.github.valtergabriell.mslead.infra.external.send.SendNewClientToQueue;
+import io.github.valtergabriell.mslead.infra.external.send.ClientQueue;
 import io.github.valtergabriell.mslead.infra.repository.LeadRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -23,12 +23,12 @@ import java.util.Optional;
 @Service
 public class LeadService {
     private final LeadRepository leadRepository;
-    private final SendNewClientToQueue sendNewClientToQueue;
+    private final ClientQueue clientQueue;
     private final EmployeesConnection employeesConnection;
 
-    public LeadService(LeadRepository leadRepository, SendNewClientToQueue sendNewClientToQueue, EmployeesConnection employeesConnection) {
+    public LeadService(LeadRepository leadRepository, ClientQueue clientQueue, EmployeesConnection employeesConnection) {
         this.leadRepository = leadRepository;
-        this.sendNewClientToQueue = sendNewClientToQueue;
+        this.clientQueue = clientQueue;
         this.employeesConnection = employeesConnection;
     }
 
@@ -59,7 +59,7 @@ public class LeadService {
         }
         validatingFields(reqLeadCreation);
         Lead lead = createNewLeadAndSaveAtDatabase(reqLeadCreation, modelMapper);
-      //  sendLeadToQueueForCreateClient(reqLeadCreation, modelMapper, lead);
+        sendLeadToQueueForCreateClient(reqLeadCreation, modelMapper, lead);
         CreatedLeadResponse createdLeadResponse = modelMapper.map(lead, CreatedLeadResponse.class);
         createdLeadResponse.setUri(headerLocation.toString());
         return createdLeadResponse;
@@ -68,7 +68,7 @@ public class LeadService {
     private void sendLeadToQueueForCreateClient(ReqLeadCreation reqLeadCreation, ModelMapper modelMapper, Lead lead) {
         ClientAccount clientAccount = modelMapper.map(lead, ClientAccount.class);
         clientAccount.setIncome(reqLeadCreation.getIncome());
-        sendNewClientToQueue.createNewClient(clientAccount);
+        clientQueue.createNewClient(clientAccount);
     }
 
     private Lead createNewLeadAndSaveAtDatabase(ReqLeadCreation reqLeadCreation, ModelMapper modelMapper) {
@@ -121,6 +121,7 @@ public class LeadService {
             throw new RequestExceptions("Usuário " + id + " não foi encontrado");
         }
         employeesConnection.deleteAllEmployeesWhenLeadIsDeleted(id);
+        clientQueue.deleteClient(id);
         leadRepository.delete(lead.get());
     }
 }

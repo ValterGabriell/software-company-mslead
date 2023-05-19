@@ -5,32 +5,35 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.valtergabriell.mslead.application.domain.dto.ClientAccount;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-public class SendNewClientToQueue {
+public class ClientQueue {
 
-    private final RabbitTemplate rabbitTemplate;
-    private final Queue createClientQueue;
+    private final AmqpTemplate rabbitTemplate;
 
-    public SendNewClientToQueue(RabbitTemplate rabbitTemplate, Queue createClientQueue) {
+    public ClientQueue(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
-        this.createClientQueue = createClientQueue;
     }
 
     public void createNewClient(ClientAccount clientAccount) {
         log.info("Dados recebidos: " + clientAccount.toString());
         String payload = convertToJson(clientAccount);
-        rabbitTemplate.convertAndSend(createClientQueue.getName(), payload);
+        rabbitTemplate.convertAndSend("create-client-queue", payload);
     }
 
-    private String convertToJson(ClientAccount clientAccount) {
+    public void deleteClient(Long id) {
+        String payload = convertToJson(id);
+        rabbitTemplate.convertAndSend("delete-client-queue", payload);
+    }
+
+    private <T> String convertToJson(T data) {
         ObjectMapper om = new ObjectMapper();
         try {
-            return om.writeValueAsString(clientAccount);
+            return om.writeValueAsString(data);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

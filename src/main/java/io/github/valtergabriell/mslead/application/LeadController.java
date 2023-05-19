@@ -32,6 +32,12 @@ public class LeadController {
         return new ResponseEntity<>(allColaborators, HttpStatus.OK);
     }
 
+    @GetMapping(value = "/find-all")
+    public ResponseEntity<List<Lead>> findAll() {
+        List<Lead> allLead = leadService.findAll();
+        return new ResponseEntity<>(allLead, HttpStatus.OK);
+    }
+
     @GetMapping(value = "/find-by-id", params = {"cnpj"})
     public ResponseEntity<Response<Lead>> findLeadById(@RequestParam("cnpj") Long cnpj) {
         Response<Lead> leadById = leadService.findLeadById(cnpj);
@@ -46,7 +52,7 @@ public class LeadController {
     }
 
     @DeleteMapping(value = "/delete", params = {"cnpj"})
-    public ResponseEntity deleteLeadByCnpj(@RequestParam("cnpj") Long cnpj) {
+    public ResponseEntity<?> deleteLeadByCnpj(@RequestParam("cnpj") Long cnpj) {
         leadService.deleteLeadById(cnpj);
         return ResponseEntity.status(204).body("Deletando líder e seus colaboradores junto com os trabalhos...");
     }
